@@ -51,7 +51,7 @@ public class NatsConfiguration {
     
     @Bean
     @ConditionalOnMissingBean
-    public ConnectionHolder connectionHolder() {
+    public ConnectionHolder connectionHolder(Connection connection) {
         return new ConnectionHolder();
     }
     

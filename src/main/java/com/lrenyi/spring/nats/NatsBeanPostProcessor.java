@@ -34,8 +34,7 @@ public class NatsBeanPostProcessor implements BeanPostProcessor {
                 }
                 Optional<Connection> connection = connectionHolder.getValidateConnection();
                 if (connection.isEmpty()) {
-                    log.error("the connection of nats is null when create dispatcher.");
-                    return;
+                    throw new InvalidParameterException("the connection of nats is null when create dispatcher.");
                 }
                 Dispatcher dispatcher = connection.get().createDispatcher(message -> {
                     try {
