@@ -1,6 +1,5 @@
 package com.lrenyi.spring.nats;
 
-import io.nats.client.Connection;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import lombok.extern.slf4j.Slf4j;
@@ -17,13 +16,13 @@ public class NatsConnectionTest {
         properties.setConnectionTotal(2);
         
         configuration.natsConnection(properties);
-//        ConnectionHolder holder = new ConnectionHolder();
-//        while (true) {
-//            System.out.println("================================================");
-//            Connection connection = holder.getValidateConnection();
-//            Connection.Status status = connection.getStatus();
-//            System.out.println(connection + "->" + status);
-//            Thread.sleep(4000);
-//        }
+        //        ConnectionHolder holder = new ConnectionHolder();
+        //        while (true) {
+        //            System.out.println("================================================");
+        //            Connection connection = holder.getValidateConnection();
+        //            Connection.Status status = connection.getStatus();
+        //            System.out.println(connection + "->" + status);
+        //            Thread.sleep(4000);
+        //        }
     }
 }

@@ -101,6 +101,8 @@ public class NatsConfiguration {
                     ALL_CONNECTIONS.add(connect);
                 }
                 startStatusCheckerThread(builder);
+            } else if (ALL_CONNECTIONS.isEmpty()) {
+                ALL_CONNECTIONS.add(nc);
             }
         } catch (Exception e) {
             log.info("error connecting to nats", e);
@@ -137,7 +139,7 @@ public class NatsConfiguration {
     
     @Bean
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public NatsBeanPostProcessor configNatsBeanPostProcessor(Connection connection) {
-        return new NatsBeanPostProcessor(connection);
+    public NatsBeanPostProcessor configNatsBeanPostProcessor(ConnectionHolder connectionHolder) {
+        return new NatsBeanPostProcessor(connectionHolder);
     }
 }

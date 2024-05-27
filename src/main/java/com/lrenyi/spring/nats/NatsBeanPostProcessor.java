@@ -16,10 +16,10 @@ import org.springframework.core.annotation.AnnotationUtils;
 
 @Slf4j
 public class NatsBeanPostProcessor implements BeanPostProcessor {
-    private final Connection connection;
+    private final ConnectionHolder connectionHolder;
     
-    public NatsBeanPostProcessor(Connection connection) {
-        this.connection = connection;
+    public NatsBeanPostProcessor(ConnectionHolder connectionHolder) {
+        this.connectionHolder = connectionHolder;
     }
     
     @Override
@@ -32,7 +32,12 @@ public class NatsBeanPostProcessor implements BeanPostProcessor {
                 if (parameterTypes.length != 1 || !parameterTypes[0].equals(Message.class)) {
                     throw new InvalidParameterException("");
                 }
-                Dispatcher dispatcher = connection.createDispatcher(message -> {
+                Optional<Connection> connection = connectionHolder.getValidateConnection();
+                if (connection.isEmpty()) {
+                    log.error("the connection of nats is null when create dispatcher.");
+                    return;
+                }
+                Dispatcher dispatcher = connection.get().createDispatcher(message -> {
                     try {
                         method.invoke(bean, message);
                     } catch (IllegalAccessException | InvocationTargetException e) {
