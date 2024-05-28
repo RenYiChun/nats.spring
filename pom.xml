@@ -8,7 +8,7 @@
         <version>2.2.1</version>
     </parent>
     <artifactId>nats-spring</artifactId>
-    <version>1.5.2</version>
+    <version>1.5.3</version>
     <name>nats-spring</name>
     <description>rapid development of nats</description>
     <url>https://github.com/RenYiChun/nats.spring</url>
@@ -56,6 +56,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.lrenyi</groupId>
+            <artifactId>template-core</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.nats</groupId>

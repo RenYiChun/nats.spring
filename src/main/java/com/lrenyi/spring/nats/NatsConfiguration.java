@@ -6,17 +6,7 @@ import io.nats.client.ErrorListener;
 import io.nats.client.Nats;
 import io.nats.client.Options;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -37,26 +27,6 @@ import org.springframework.context.annotation.Role;
 @ConditionalOnClass({Connection.class})
 @EnableConfigurationProperties(NatsProperties.class)
 public class NatsConfiguration {
-    private static final List<Connection> ALL_CONNECTIONS = new ArrayList<>();
-    private static final Lock lock = new ReentrantLock();
-    private static boolean started = false;
-    ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    
-    public static List<Connection> findAllConnection() {
-        lock.lock();
-        try {
-            return ALL_CONNECTIONS;
-        } finally {
-            lock.unlock();
-        }
-    }
-    
-    @Bean
-    @ConditionalOnMissingBean
-    public ConnectionHolder connectionHolder(Connection connection) {
-        return new ConnectionHolder();
-    }
-    
     /**
      * @return NATS connection created with the provided properties. If no server URL is set the method will return
      * null.
@@ -66,9 +36,13 @@ public class NatsConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public Connection natsConnection(NatsProperties properties,
-                                     NatsBeanPostProcessor processor) throws IOException, InterruptedException,
+    public Connection natsConnection(NatsProperties properties) throws IOException, InterruptedException,
             GeneralSecurityException {
+        return makeConnection(properties);
+    }
+    
+    public static Connection makeConnection(NatsProperties properties) throws IOException, GeneralSecurityException,
+            InterruptedException {
         Connection nc;
         String serverProp = (properties != null) ? properties.getServer() : null;
         if (serverProp == null || serverProp.isEmpty()) {
@@ -97,55 +71,11 @@ public class NatsConfiguration {
                 }
             });
             nc = Nats.connect(builder.build());
-            if (properties.isReconnectWhenClosed() && ALL_CONNECTIONS.size() < total) {
-                ALL_CONNECTIONS.add(nc);
-                for (int i = 0; i < total - 1; i++) {
-                    Connection connect = Nats.connect(builder.build());
-                    ALL_CONNECTIONS.add(connect);
-                }
-                startStatusCheckerThread(builder, processor);
-            } else if (ALL_CONNECTIONS.isEmpty()) {
-                ALL_CONNECTIONS.add(nc);
-            }
         } catch (Exception e) {
             log.info("error connecting to nats", e);
             throw e;
         }
         return nc;
-    }
-    
-    private synchronized void startStatusCheckerThread(Options.Builder builder, NatsBeanPostProcessor processor) {
-        if (started) {
-            return;
-        }
-        Runnable runnable = () -> {
-            lock.lock();
-            Iterator<Connection> iterator = ALL_CONNECTIONS.iterator();
-            List<Connection> newConn = new ArrayList<>();
-            Map<Connection, List<Object>> resubscribes = processor.getResubscribes();
-            while (iterator.hasNext()) {
-                Connection connection = iterator.next();
-                if (connection == null || connection.getStatus() != Connection.Status.CLOSED) {
-                    continue;
-                }
-                List<Object> objects = resubscribes.get(connection);
-                try {
-                    Connection connect = Nats.connect(builder.build());
-                    newConn.add(connect);
-                    if (objects != null) {
-                        Object bean = objects.get(0);
-                        Method method = (Method) objects.get(1);
-                        processor.dispatcherSubscribe(bean, method, String.valueOf(objects.get(2)), connect);
-                        resubscribes.remove(connection);
-                    }
-                    iterator.remove();
-                } catch (Throwable ignore) {}
-            }
-            ALL_CONNECTIONS.addAll(newConn);
-            lock.unlock();
-        };
-        scheduler.scheduleAtFixedRate(runnable, 1, 8, TimeUnit.SECONDS);
-        started = true;
     }
     
     @Bean

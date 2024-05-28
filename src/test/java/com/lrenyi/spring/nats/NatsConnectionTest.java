@@ -3,9 +3,7 @@ package com.lrenyi.spring.nats;
 import com.lrenyi.spring.nats.annotations.Subscribe;
 import io.nats.client.Connection;
 import io.nats.client.Message;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -14,16 +12,17 @@ import org.junit.jupiter.api.Test;
 public class NatsConnectionTest {
     
     @Test
-    public void testReConnection() throws IOException, InterruptedException, GeneralSecurityException {
-        NatsConfiguration configuration = new NatsConfiguration();
+    public void testReConnection() throws Exception {
         NatsProperties properties = new NatsProperties();
         properties.setServer("nats://localhost:4222");
         properties.setConnectionTotal(2);
         
         ConnectionHolder holder = new ConnectionHolder();
-        NatsBeanPostProcessor processor = new NatsBeanPostProcessor(holder);
+        holder.setProperties(properties);
         
-        configuration.natsConnection(properties, processor);
+        NatsBeanPostProcessor processor = new NatsBeanPostProcessor(holder);
+        holder.startStatusChecker(processor);
+        
         processor.postProcessAfterInitialization(new TestBean(), "testBean");
         
         while (true) {
@@ -45,8 +44,7 @@ public class NatsConnectionTest {
         }
     }
     
-    private class TestBean {
-        
+    private static class TestBean {
         @Subscribe("trace-data")
         public void sub(Message msg) {
             System.out.println("####: " + new String(msg.getData()));
