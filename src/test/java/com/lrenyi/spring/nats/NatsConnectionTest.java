@@ -1,7 +1,12 @@
 package com.lrenyi.spring.nats;
 
+import com.lrenyi.spring.nats.annotations.Subscribe;
+import io.nats.client.Connection;
+import io.nats.client.Message;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
@@ -15,14 +20,36 @@ public class NatsConnectionTest {
         properties.setServer("nats://localhost:4222");
         properties.setConnectionTotal(2);
         
-        configuration.natsConnection(properties);
-        //        ConnectionHolder holder = new ConnectionHolder();
-        //        while (true) {
-        //            System.out.println("================================================");
-        //            Connection connection = holder.getValidateConnection();
-        //            Connection.Status status = connection.getStatus();
-        //            System.out.println(connection + "->" + status);
-        //            Thread.sleep(4000);
-        //        }
+        ConnectionHolder holder = new ConnectionHolder();
+        NatsBeanPostProcessor processor = new NatsBeanPostProcessor(holder);
+        
+        configuration.natsConnection(properties, processor);
+        processor.postProcessAfterInitialization(new TestBean(), "testBean");
+        
+        while (true) {
+            System.out.println("================================================");
+            Optional<Connection> connection1Optional = holder.getValidateConnection();
+            if (connection1Optional.isEmpty()) {
+                Thread.sleep(4000);
+                continue;
+            }
+            Connection connection = connection1Optional.get();
+            Connection.Status status = connection.getStatus();
+            if (Connection.Status.CLOSED == status) {
+                Thread.sleep(4000);
+                continue;
+            }
+            connection.publish("trace-data", "你好".getBytes(StandardCharsets.UTF_8));
+            System.out.println(connection + "->" + status);
+            Thread.sleep(4000);
+        }
+    }
+    
+    private class TestBean {
+        
+        @Subscribe("trace-data")
+        public void sub(Message msg) {
+            System.out.println("####: " + new String(msg.getData()));
+        }
     }
 }

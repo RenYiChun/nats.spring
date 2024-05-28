@@ -5,10 +5,10 @@
     <parent>
         <groupId>com.lrenyi</groupId>
         <artifactId>template-dependencies</artifactId>
-        <version>2.2.0</version>
+        <version>2.2.1</version>
     </parent>
     <artifactId>nats-spring</artifactId>
-    <version>1.5.1</version>
+    <version>1.5.2</version>
     <name>nats-spring</name>
     <description>rapid development of nats</description>
     <url>https://github.com/RenYiChun/nats.spring</url>

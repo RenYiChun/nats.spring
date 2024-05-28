@@ -6,10 +6,12 @@ import io.nats.client.ErrorListener;
 import io.nats.client.Nats;
 import io.nats.client.Options;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -64,7 +66,8 @@ public class NatsConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public Connection natsConnection(NatsProperties properties) throws IOException, InterruptedException,
+    public Connection natsConnection(NatsProperties properties,
+                                     NatsBeanPostProcessor processor) throws IOException, InterruptedException,
             GeneralSecurityException {
         Connection nc;
         String serverProp = (properties != null) ? properties.getServer() : null;
@@ -100,7 +103,7 @@ public class NatsConfiguration {
                     Connection connect = Nats.connect(builder.build());
                     ALL_CONNECTIONS.add(connect);
                 }
-                startStatusCheckerThread(builder);
+                startStatusCheckerThread(builder, processor);
             } else if (ALL_CONNECTIONS.isEmpty()) {
                 ALL_CONNECTIONS.add(nc);
             }
@@ -111,7 +114,7 @@ public class NatsConfiguration {
         return nc;
     }
     
-    private synchronized void startStatusCheckerThread(Options.Builder builder) {
+    private synchronized void startStatusCheckerThread(Options.Builder builder, NatsBeanPostProcessor processor) {
         if (started) {
             return;
         }
@@ -119,14 +122,22 @@ public class NatsConfiguration {
             lock.lock();
             Iterator<Connection> iterator = ALL_CONNECTIONS.iterator();
             List<Connection> newConn = new ArrayList<>();
+            Map<Connection, List<Object>> resubscribes = processor.getResubscribes();
             while (iterator.hasNext()) {
                 Connection connection = iterator.next();
                 if (connection == null || connection.getStatus() != Connection.Status.CLOSED) {
                     continue;
                 }
+                List<Object> objects = resubscribes.get(connection);
                 try {
                     Connection connect = Nats.connect(builder.build());
                     newConn.add(connect);
+                    if (objects != null) {
+                        Object bean = objects.get(0);
+                        Method method = (Method) objects.get(1);
+                        processor.dispatcherSubscribe(bean, method, String.valueOf(objects.get(2)), connect);
+                        resubscribes.remove(connection);
+                    }
                     iterator.remove();
                 } catch (Throwable ignore) {}
             }
