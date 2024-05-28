@@ -19,11 +19,9 @@ public class NatsConnectionTest {
         
         ConnectionHolder holder = new ConnectionHolder();
         holder.setProperties(properties);
+        holder.afterPropertiesSet();
         
-        NatsBeanPostProcessor processor = new NatsBeanPostProcessor(holder);
-        holder.startStatusChecker(processor);
-        
-        processor.postProcessAfterInitialization(new TestBean(), "testBean");
+        holder.postProcessAfterInitialization(new TestBean(), "testBean");
         
         while (true) {
             System.out.println("================================================");
