@@ -37,6 +37,7 @@ public class NatsConnectionTest {
                 continue;
             }
             connection.publish("trace-data", "你好".getBytes(StandardCharsets.UTF_8));
+            connection.publish("trace-data1", "你好".getBytes(StandardCharsets.UTF_8));
             System.out.println(connection + "->" + status);
             Thread.sleep(4000);
         }
@@ -45,7 +46,12 @@ public class NatsConnectionTest {
     private static class TestBean {
         @Subscribe("trace-data")
         public void sub(Message msg) {
-            System.out.println("####: " + new String(msg.getData()));
+            System.out.println("####A: " + new String(msg.getData()));
+        }
+        
+        @Subscribe("trace-data1")
+        public void sub1(Message msg) {
+            System.out.println("####B: " + new String(msg.getData()));
         }
     }
 }

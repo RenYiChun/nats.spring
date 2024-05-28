@@ -10,10 +10,12 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -33,7 +35,7 @@ public class ConnectionHolder implements InitializingBean, BeanPostProcessor {
     public final Lock lock = new ReentrantLock();
     private final AtomicInteger next = new AtomicInteger(0);
     private final List<Connection> allConn = new ArrayList<>();
-    private final Map<Connection, List<Object>> resubscribes = new HashMap<>();
+    private final Map<Connection, Set<SubscribeInfo>> resubscribes = new HashMap<>();
     ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private NatsProperties properties;
     
@@ -69,17 +71,20 @@ public class ConnectionHolder implements InitializingBean, BeanPostProcessor {
                 if (connection == null || connection.getStatus() != Connection.Status.CLOSED) {
                     continue;
                 }
-                List<Object> objects = resubscribes.get(connection);
+                Set<SubscribeInfo> subscribeInfos = resubscribes.get(connection);
                 try {
                     Connection connect = NatsConfiguration.makeConnection(properties);
                     if (connect == null) {
                         continue;
                     }
                     newConn.add(connect);
-                    if (objects != null) {
-                        Object bean = objects.get(0);
-                        Method method = (Method) objects.get(1);
-                        dispatcherSubscribe(bean, method, String.valueOf(objects.get(2)), connect);
+                    if (subscribeInfos != null) {
+                        subscribeInfos.forEach(subscribeInfo -> {
+                            Object bean = subscribeInfo.getBean();
+                            Method method = subscribeInfo.getMethod();
+                            String subject = subscribeInfo.getSubject();
+                            dispatcherSubscribe(bean, method, subject, connect);
+                        });
                         resubscribes.remove(connection);
                     }
                     iterator.remove();
@@ -100,10 +105,8 @@ public class ConnectionHolder implements InitializingBean, BeanPostProcessor {
             }
         });
         dispatcher.subscribe(sub);
-        List<Object> objects = resubscribes.computeIfAbsent(connection, k -> new ArrayList<>());
-        objects.add(bean);
-        objects.add(method);
-        objects.add(sub);
+        Set<SubscribeInfo> subscribeInfos = resubscribes.computeIfAbsent(connection, k -> new HashSet<>());
+        subscribeInfos.add(new SubscribeInfo(bean, method, sub));
     }
     
     @Override
