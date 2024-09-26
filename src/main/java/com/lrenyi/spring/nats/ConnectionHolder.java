@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class ConnectionHolder implements InitializingBean, BeanPostProcessor {
     public final Lock lock = new ReentrantLock();
@@ -101,7 +103,7 @@ public class ConnectionHolder implements InitializingBean, BeanPostProcessor {
             try {
                 method.invoke(bean, message);
             } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new InvalidParameterException(String.format("error for method invoke: %s", method.getName()));
+                log.error("invoke method[{}] error.", method.getName(), e);
             }
         });
         dispatcher.subscribe(sub);
