@@ -84,7 +84,7 @@ public class ConnectionHolder implements InitializingBean, BeanPostProcessor {
                         subscribeInfos.forEach(subscribeInfo -> {
                             Object bean = subscribeInfo.getBean();
                             Method method = subscribeInfo.getMethod();
-                            String subject = subscribeInfo.getSubject();
+                            Subscribe subject = subscribeInfo.getSubject();
                             dispatcherSubscribe(bean, method, subject, connect);
                         });
                         resubscribes.remove(connection);
@@ -98,7 +98,7 @@ public class ConnectionHolder implements InitializingBean, BeanPostProcessor {
         scheduler.scheduleAtFixedRate(runnable, 1, 8, TimeUnit.SECONDS);
     }
     
-    public void dispatcherSubscribe(Object bean, Method method, String sub, Connection connection) {
+    public void dispatcherSubscribe(Object bean, Method method, Subscribe sub, Connection connection) {
         Dispatcher dispatcher = connection.createDispatcher(message -> {
             try {
                 method.invoke(bean, message);
@@ -106,7 +106,12 @@ public class ConnectionHolder implements InitializingBean, BeanPostProcessor {
                 log.error("invoke method[{}] error.", method.getName(), e);
             }
         });
-        dispatcher.subscribe(sub);
+        String queue = sub.queue();
+        if (queue.isEmpty()) {
+            dispatcher.subscribe(sub.value());
+        } else {
+            dispatcher.subscribe(sub.value(), queue);
+        }
         Set<SubscribeInfo> subscribeInfos = resubscribes.computeIfAbsent(connection, k -> new HashSet<>());
         subscribeInfos.add(new SubscribeInfo(bean, method, sub));
     }
@@ -126,7 +131,7 @@ public class ConnectionHolder implements InitializingBean, BeanPostProcessor {
                     throw new InvalidParameterException("the connection of nats is null when create dispatcher.");
                 }
                 Connection connection = connectionOptional.get();
-                dispatcherSubscribe(bean, method, sub.value(), connection);
+                dispatcherSubscribe(bean, method, sub, connection);
             });
         });
         return bean;

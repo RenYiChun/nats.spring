@@ -1,5 +1,6 @@
 package com.lrenyi.spring.nats;
 
+import com.lrenyi.spring.nats.annotations.Subscribe;
 import java.lang.reflect.Method;
 import java.util.Objects;
 import lombok.Getter;
@@ -10,12 +11,12 @@ import lombok.Setter;
 public class SubscribeInfo {
     private Object bean;
     private Method method;
-    private String subject;
+    private Subscribe subject;
     
     public SubscribeInfo() {
     }
     
-    public SubscribeInfo(Object bean, Method method, String subject) {
+    public SubscribeInfo(Object bean, Method method, Subscribe subject) {
         this.bean = bean;
         this.method = method;
         this.subject = subject;
@@ -33,7 +34,8 @@ public class SubscribeInfo {
         //@formatter:off
         return Objects.equals(bean, that.bean)
                 && Objects.equals(method, that.method)
-                && Objects.equals(subject,that.subject);
+                && Objects.equals(subject.value(),that.subject.value())
+                && Objects.equals(subject.queue(),that.subject.queue());
         //@formatter:on
     }
 }
