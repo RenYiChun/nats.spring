@@ -26,7 +26,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * during autoconfigure to initialize the underlying NATs connection.
  */
 @ConditionalOnClass({Options.class})
-@ConfigurationProperties(prefix = "app.config.nats")
+@ConfigurationProperties(prefix = "app.template.nats")
 public class NatsProperties extends NatsConnectionProperties {
     
     /**

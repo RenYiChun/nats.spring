@@ -5,10 +5,10 @@
     <parent>
         <groupId>com.lrenyi</groupId>
         <artifactId>template-dependencies</artifactId>
-        <version>2.3.3</version>
+        <version>2.4.0</version>
     </parent>
     <artifactId>nats-spring</artifactId>
-    <version>1.5.7</version>
+    <version>1.5.8</version>
     <name>nats-spring</name>
     <description>rapid development of nats</description>
     <url>https://github.com/RenYiChun/nats.spring</url>
@@ -36,7 +36,7 @@
     <properties>
         <checkstyle.related.dir/>
         <checkstyle.file.dir>${project.basedir}/${checkstyle.related.dir}/coder-checker/</checkstyle.file.dir>
-        <jnats.version>2.20.2</jnats.version>
+        <jnats.version>2.21.2</jnats.version>
         <spotbugs-maven-plugin.version>4.8.1.0</spotbugs-maven-plugin.version>
         <maven-checkstyle-plugin.version>3.3.0</maven-checkstyle-plugin.version>
         <maven-site-plugin.version>3.12.1</maven-site-plugin.version>
