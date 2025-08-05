@@ -8,11 +8,13 @@ import io.nats.client.Options;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Role;
 
 /**
  * NatsConfiguration will create a NATS connection from an instance of NatsProperties.
@@ -23,6 +25,7 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 @ConditionalOnClass({Connection.class})
+@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @EnableConfigurationProperties(NatsProperties.class)
 public class NatsConfiguration {
     /**

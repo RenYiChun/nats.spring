@@ -17,8 +17,10 @@
 package com.lrenyi.spring.nats;
 
 import io.nats.client.Options;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Role;
 
 /**
  * NatsProperties extends NatsConnectionProperties, which provides all of the
@@ -26,6 +28,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * during autoconfigure to initialize the underlying NATs connection.
  */
 @ConditionalOnClass({Options.class})
+@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @ConfigurationProperties(prefix = "app.template.nats")
 public class NatsProperties extends NatsConnectionProperties {
     
