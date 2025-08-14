@@ -1,6 +1,5 @@
 package com.lrenyi.spring.nats;
 
-import com.lrenyi.template.core.util.StringUtils;
 import io.nats.client.Connection;
 import io.nats.client.Message;
 import io.nats.client.Subscription;
@@ -12,6 +11,7 @@ import java.util.Optional;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @Component

@@ -1,9 +1,9 @@
 package com.lrenyi.spring.nats;
 
-import com.lrenyi.template.core.util.StringUtils;
 import java.util.ServiceLoader;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 public class EventInitService {
