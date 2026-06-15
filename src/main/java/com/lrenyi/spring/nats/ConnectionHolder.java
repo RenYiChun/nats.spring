@@ -1,9 +1,5 @@
 package com.lrenyi.spring.nats;
 
-import com.lrenyi.spring.nats.annotations.Subscribe;
-import io.nats.client.Connection;
-import io.nats.client.Dispatcher;
-import io.nats.client.Message;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.InvalidParameterException;
@@ -22,6 +18,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import com.lrenyi.spring.nats.annotations.Subscribe;
+import io.nats.client.Connection;
+import io.nats.client.Dispatcher;
+import io.nats.client.Message;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
@@ -41,7 +41,7 @@ public class ConnectionHolder implements InitializingBean, BeanPostProcessor {
     ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private NatsProperties properties;
     
-    @Autowired
+    @Autowired(required = false)
     public void setConnection(Connection connection) {
         allConn.add(connection);
     }
