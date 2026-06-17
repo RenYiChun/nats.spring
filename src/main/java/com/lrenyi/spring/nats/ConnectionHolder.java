@@ -43,7 +43,9 @@ public class ConnectionHolder implements InitializingBean, BeanPostProcessor {
     
     @Autowired(required = false)
     public void setConnection(Connection connection) {
-        allConn.add(connection);
+        if (connection != null) {
+            allConn.add(connection);
+        }
     }
     
     @Autowired
@@ -53,12 +55,18 @@ public class ConnectionHolder implements InitializingBean, BeanPostProcessor {
     
     @Override
     public void afterPropertiesSet() throws Exception {
+        if (!NatsConfiguration.hasServer(properties) && allConn.isEmpty()) {
+            log.warn("skip nats connection status checker because server url is not configured.");
+            return;
+        }
         startStatusCheckerThread();
         int total = properties.getConnectionTotal();
         if (properties.isReconnectWhenClosed() && allConn.size() < total) {
             for (int i = 0; i < total - 1; i++) {
                 Connection connection = NatsConfiguration.makeConnection(properties);
-                allConn.add(connection);
+                if (connection != null) {
+                    allConn.add(connection);
+                }
             }
         }
     }
@@ -118,6 +126,9 @@ public class ConnectionHolder implements InitializingBean, BeanPostProcessor {
     
     @Override
     public Object postProcessAfterInitialization(Object bean, @NonNull String beanName) throws BeansException {
+        if (!NatsConfiguration.hasServer(properties) && findAllConnection().isEmpty()) {
+            return bean;
+        }
         final Class<?> clazz = bean.getClass();
         Arrays.stream(clazz.getMethods()).forEach(method -> {
             Optional<Subscribe> subOpt = Optional.ofNullable(AnnotationUtils.findAnnotation(method, Subscribe.class));

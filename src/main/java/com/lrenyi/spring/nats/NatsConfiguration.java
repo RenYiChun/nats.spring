@@ -13,8 +13,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;
+import org.springframework.util.StringUtils;
 
 /**
  * NatsConfiguration will create a NATS connection from an instance of NatsProperties.
@@ -37,6 +39,7 @@ public class NatsConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
+    @Conditional(NatsServerConfiguredCondition.class)
     public Connection natsConnection(NatsProperties properties) throws IOException, InterruptedException,
             GeneralSecurityException {
         return makeConnection(properties);
@@ -45,9 +48,8 @@ public class NatsConfiguration {
     public static Connection makeConnection(NatsProperties properties) throws IOException, GeneralSecurityException,
             InterruptedException {
         Connection nc;
-        String serverProp = (properties != null) ? properties.getServer() : null;
-        if (serverProp == null || serverProp.isEmpty()) {
-            log.error("the server url of nats is null.....");
+        if (!hasServer(properties)) {
+            log.warn("the server url of nats is null, skip creating nats connection.");
             return null;
         }
         Options.Builder builder = properties.toOptionsBuilder();
@@ -77,5 +79,9 @@ public class NatsConfiguration {
             throw e;
         }
         return nc;
+    }
+    
+    static boolean hasServer(NatsProperties properties) {
+        return properties != null && StringUtils.hasText(properties.getServer());
     }
 }
