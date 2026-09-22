@@ -104,6 +104,11 @@ public class NatsConnectionProperties {
     private boolean reconnectWhenClosed = true;
     
     private int connectionTotal = 1;
+
+    /**
+     * Delay dispatcher subscriptions until Spring Boot has completed all startup runners.
+     */
+    private boolean subscribeAfterApplicationReady;
     
     /**
      * Authentication user name. Requires the password, but not the token, or
@@ -971,5 +976,13 @@ public class NatsConnectionProperties {
     
     public void setConnectionTotal(int connectionTotal) {
         this.connectionTotal = connectionTotal;
+    }
+
+    public boolean isSubscribeAfterApplicationReady() {
+        return subscribeAfterApplicationReady;
+    }
+
+    public void setSubscribeAfterApplicationReady(boolean subscribeAfterApplicationReady) {
+        this.subscribeAfterApplicationReady = subscribeAfterApplicationReady;
     }
 }
